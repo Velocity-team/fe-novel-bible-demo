@@ -1,0 +1,295 @@
+import { useState } from "react";
+import { useApp } from "../context/AppContext";
+import { downloadJSON } from "../utils/storage";
+
+function ListEditor({
+  title,
+  icon,
+  items,
+  onChange,
+  placeholder,
+}: {
+  title: string;
+  icon: string;
+  items: string[];
+  onChange: (items: string[]) => void;
+  placeholder: string;
+}) {
+  const [input, setInput] = useState("");
+  const add = () => {
+    const v = input.trim();
+    if (!v || items.includes(v)) return;
+    onChange([...items, v]);
+    setInput("");
+  };
+  return (
+    <section className="card p-6">
+      <h3 className="mb-3 text-lg font-bold text-stone-800">
+        {icon} {title}
+      </h3>
+      <ul className="mb-3 space-y-1.5">
+        {items.map((r) => (
+          <li
+            key={r}
+            className="group flex items-center justify-between gap-2 rounded-xl bg-paper-100 px-3 py-2.5 text-base text-stone-700"
+          >
+            <span>{r}</span>
+            <button
+              className="text-stone-400 opacity-0 transition hover:text-red-600 group-hover:opacity-100"
+              onClick={() => onChange(items.filter((x) => x !== r))}
+              title="삭제"
+            >
+              ✕
+            </button>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="text-base text-stone-400">아직 등록한 내용이 없습니다.</li>
+        )}
+      </ul>
+      <div className="flex gap-2">
+        <input
+          className="input flex-1"
+          placeholder={placeholder}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add()}
+        />
+        <button className="btn-ghost" onClick={add}>
+          추가
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export default function ProjectSettings() {
+  const { state, updateProject, resetAll, openBlockDetail } = useApp();
+  const { project } = state;
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [form, setForm] = useState({
+    title: project.title,
+    genre: project.genre,
+    logline: project.logline,
+    summary: project.summary,
+  });
+
+  const save = () => {
+    updateProject(form);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+  };
+
+  const characters = state.blocks.filter((b) => b.type === "character");
+  const rules = state.blocks.filter((b) => b.type === "rule");
+
+  return (
+    <div className="fade-up space-y-5">
+      <div>
+        <h2 className="text-2xl font-extrabold text-stone-800">작품 설정</h2>
+        <p className="text-base text-stone-500">작품의 기본 정보와 꼭 지켜야 할 규칙을 관리합니다.</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* 기본 정보 */}
+        <section className="card space-y-3 p-6">
+          <h3 className="text-lg font-bold text-stone-800">📖 작품 정보</h3>
+          <div>
+            <label className="label">작품 제목</label>
+            <input
+              className="input"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">장르</label>
+            <input
+              className="input"
+              value={form.genre}
+              onChange={(e) => setForm({ ...form, genre: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">
+              한 줄 소개 <span className="font-normal text-stone-400">(선택)</span>
+            </label>
+            <textarea
+              className="input min-h-16"
+              value={form.logline}
+              onChange={(e) => setForm({ ...form, logline: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">
+              줄거리 요약 <span className="font-normal text-stone-400">(선택)</span>
+            </label>
+            <textarea
+              className="input min-h-24"
+              value={form.summary}
+              onChange={(e) => setForm({ ...form, summary: e.target.value })}
+            />
+          </div>
+          <button className="btn-primary" onClick={save}>
+            {savedFlash ? "✓ 저장됐어요!" : "💾 작품 정보 저장"}
+          </button>
+        </section>
+
+        {/* 주요 인물 + 핵심 규칙 */}
+        <div className="space-y-4">
+          <section className="card p-6">
+            <h3 className="mb-3 text-lg font-bold text-stone-800">👥 주요 인물</h3>
+            <ul className="space-y-1.5">
+              {characters.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-xl bg-paper-100 px-3 py-2.5 transition hover:bg-paper-200"
+                  onClick={() => openBlockDetail(c.id)}
+                >
+                  <span className="text-lg">👤</span>
+                  <span className="text-base font-semibold text-stone-800">{c.name}</span>
+                  <span className="flex-1 truncate text-sm text-stone-500">
+                    {c.description}
+                  </span>
+                  {c.attributes["성격"] && (
+                    <span className="chip bg-violet-100 text-violet-800">
+                      {c.attributes["성격"]}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section className="card p-6">
+            <h3 className="mb-3 text-lg font-bold text-stone-800">📜 세계관 규칙</h3>
+            <ul className="space-y-1.5">
+              {rules.map((r) => (
+                <li
+                  key={r.id}
+                  className="cursor-pointer rounded-xl bg-paper-100 px-3 py-2.5 text-base text-stone-700 transition hover:bg-paper-200"
+                  onClick={() => openBlockDetail(r.id)}
+                >
+                  <b className="text-pink-700">{r.name}</b> — {r.description}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      {/* 회차별 줄거리 */}
+      <section className="card p-6">
+        <h3 className="mb-3 text-lg font-bold text-stone-800">
+          🎞️ 회차별 줄거리 ({project.episodes.length}회차)
+        </h3>
+        <ol className="space-y-1.5">
+          {project.episodes.map((ep) => (
+            <li key={ep.id} className="flex gap-3 rounded-xl bg-paper-100 px-3 py-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-800">
+                {ep.number}
+              </span>
+              <div>
+                <div className="text-base font-semibold text-stone-800">{ep.title}</div>
+                <p className="text-sm leading-relaxed text-stone-500">{ep.summary}</p>
+              </div>
+              {ep.wordCount > 0 && (
+                <span className="ml-auto shrink-0 self-center text-sm text-stone-400">
+                  {ep.wordCount.toLocaleString()}자
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* 규칙/제약 관리 */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ListEditor
+          title="꼭 지킬 세계관 규칙"
+          icon="⚖️"
+          items={project.canonRules}
+          onChange={(canonRules) => updateProject({ canonRules })}
+          placeholder="예: 제비는 은혜를 입은 만큼만 보답한다"
+        />
+        <ListEditor
+          title="AI에게 거는 조건"
+          icon="🤖"
+          items={project.generationConstraints}
+          onChange={(generationConstraints) => updateProject({ generationConstraints })}
+          placeholder="예: 마지막 회차 전까지 놀부 벌 주지 않기"
+        />
+        <ListEditor
+          title="금지하는 전개"
+          icon="🚫"
+          items={project.forbiddenSettings}
+          onChange={(forbiddenSettings) => updateProject({ forbiddenSettings })}
+          placeholder="예: 흥부의 복수 전개 금지"
+        />
+      </div>
+
+      {/* 작가 메모 */}
+      <section className="card p-6">
+        <h3 className="mb-3 text-lg font-bold text-stone-800">
+          📝 작가 메모 ({state.notes.length})
+        </h3>
+        <div className="grid gap-2 md:grid-cols-3">
+          {state.notes.map((n) => (
+            <div key={n.id} className="rounded-xl border border-paper-300 bg-paper-100 p-4">
+              <div className="mb-1 text-base font-bold text-stone-800">{n.title}</div>
+              <p className="text-sm leading-relaxed text-stone-500">{n.content}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 내려받기 / 초기화 */}
+      <section className="card p-6">
+        <h3 className="mb-3 text-lg font-bold text-stone-800">📤 내려받기 / 처음부터 다시 시작</h3>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="btn-ghost"
+            onClick={() => downloadJSON("loreblock-설정카드.json", state.blocks)}
+          >
+            설정 카드 내려받기
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => downloadJSON("loreblock-관계.json", state.relations)}
+          >
+            관계 내려받기
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => downloadJSON("loreblock-설정오류.json", state.conflicts)}
+          >
+            설정 오류 내려받기
+          </button>
+          <button
+            className="btn-green"
+            onClick={() => downloadJSON("loreblock-작품전체.json", state)}
+          >
+            📦 작품 전체 내려받기
+          </button>
+          <button
+            className="btn-danger ml-auto"
+            onClick={() => {
+              if (
+                confirm(
+                  "모든 데이터를 지우고 처음 시작 화면(원고 올리기)으로 돌아갈까요?"
+                )
+              ) {
+                resetAll();
+              }
+            }}
+          >
+            ♻️ 처음부터 다시 시작
+          </button>
+        </div>
+        <p className="mt-3 text-sm text-stone-500">
+          내려받기는 지금 저장된 내용을 JSON 파일로 저장합니다. ‘처음부터 다시 시작’을
+          누르면 모든 기록이 지워지고 첫 시작 화면으로 돌아갑니다.
+        </p>
+      </section>
+    </div>
+  );
+}

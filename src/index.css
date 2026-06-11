@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  /* 전체 UI를 한 단계 크게 (rem 기준 확대) */
+  font-size: 17px;
+}
+
+html,
+body {
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Segoe UI",
+    sans-serif;
+  background: #faf6ef;
+  color: #2c2418;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d9cdb8 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d9cdb8;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-paper-300 bg-white shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-base font-semibold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-amber-600 text-white hover:bg-amber-700;
+  }
+  .btn-green {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+  }
+  .btn-ghost {
+    @apply btn border border-paper-300 bg-paper-100 text-stone-700 hover:bg-paper-200;
+  }
+  .btn-danger {
+    @apply btn border border-red-200 bg-red-50 text-red-700 hover:bg-red-100;
+  }
+  .input {
+    @apply w-full rounded-xl border border-paper-300 bg-white px-3.5 py-2.5 text-base text-stone-800 placeholder-stone-400 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-bold text-stone-600;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-up {
+  animation: fadeUp 0.3s ease both;
+}
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.pulse-dot {
+  animation: pulseDot 1.2s ease-in-out infinite;
+}
+
+/* 설정 지도: 선택된 노드의 맥동 링 */
+@keyframes ringPulse {
+  0%,
+  100% {
+    stroke-opacity: 0.85;
+  }
+  50% {
+    stroke-opacity: 0.15;
+  }
+}
+.ring-pulse {
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+
+/* 설정 지도: 사건 연결선이 흐르는 점선 */
+@keyframes eventFlow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.event-flow {
+  animation: eventFlow 1.4s linear infinite;
+}
